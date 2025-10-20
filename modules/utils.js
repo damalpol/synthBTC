@@ -148,13 +148,13 @@ const Utils = {
                     return `\x1b[38;2;${intensity};${intensity};${intensity}m${char}\x1b[0m`;
                 }).join("");
     
-                process.stdout.clearLine();
+                //process.stdout.clearLine();
                 process.stdout.cursorTo(0);
                 process.stdout.write(`${frame} ${coloredMessage} \x1b[32m${(progress * 100).toFixed(0)}%\x1b[0m`);
     
                 if (progress === 1) {
                     clearInterval(interval);
-                    process.stdout.clearLine();
+                    //process.stdout.clearLine();
                     process.stdout.cursorTo(0);
                     process.stdout.write(`\x1b[32m✓\x1b[0m ${message} \x1b[32m100%\x1b[0m\n`);
                     resolve();
@@ -164,5 +164,6 @@ const Utils = {
         });
     }
 };
+
 
 module.exports = Utils;
