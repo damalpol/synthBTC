@@ -1,5 +1,15 @@
+const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
+var cors = require('cors');
+
+const app = express();
+
+
+// get our app to use body parser 
+app.use(express.urlencoded({ extended: true }));
+//app.use(express.json());
+app.use(cors());
 
 const PriceFetcher = {
     /**
@@ -68,5 +78,6 @@ const PriceFetcher = {
         }
     }
 };
+
 
 module.exports = PriceFetcher;
