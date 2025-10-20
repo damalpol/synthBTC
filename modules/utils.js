@@ -119,51 +119,66 @@ const Utils = {
         return existingIndices.length > 0 ? Math.max(...existingIndices) + 1 : 1;
     },
 
-    /**
-     * Displays a loading animation in the console for a given duration.
-     */
-    animateLoading(message, duration) {
-        return new Promise((resolve) => {
-            const frames = ["⠋", "⠙", "⠚", "⠞", "⠖", "⠦", "⠴", "⠲", "⠳", "⠓", "⠒", "⠉"];
-            const glitchChars = ["@", "!", "#", "$", "%", "&", "*", "?", "=", "+"];
-            let i = 0;
-            const startTime = Date.now();
-    
-            const interval = setInterval(() => {
-                const elapsedTime = Date.now() - startTime;
-                const progress = Math.min(elapsedTime / duration, 1);
-                const frameIndex = i % frames.length;
-                
-                const opacity = Math.floor(128 + 127 * Math.sin(i * 0.2));
-                const frame = `\x1b[38;2;0;${opacity};255m${frames[frameIndex]}\x1b[0m`;
-    
-                const wavePosition = (i % 20) / 20;
-                const coloredMessage = message.split("").map((char, index) => {
-                    const charPosition = index / message.length;
-                    const distance = Math.abs(charPosition - wavePosition);
-                    const intensity = Math.floor(255 - (distance * 255 * 2));
-                    if (Math.random() < 0.02) {
-                        char = glitchChars[Math.floor(Math.random() * glitchChars.length)];
-                    }
-                    return `\x1b[38;2;${intensity};${intensity};${intensity}m${char}\x1b[0m`;
-                }).join("");
-    
-                //process.stdout.clearLine();
-                process.stdout.cursorTo(0);
-                process.stdout.write(`${frame} ${coloredMessage} \x1b[32m${(progress * 100).toFixed(0)}%\x1b[0m`);
-    
-                if (progress === 1) {
-                    clearInterval(interval);
-                    //process.stdout.clearLine();
-                    process.stdout.cursorTo(0);
-                    process.stdout.write(`\x1b[32m✓\x1b[0m ${message} \x1b[32m100%\x1b[0m\n`);
-                    resolve();
-                }
-                i++;
-            }, 80);
-        });
-    }
-};
+   /**
+   * Displays a loading animation in the console for a given duration.
+   */
+  animateLoading(message, duration) {
+    return new Promise((resolve) => {
+      // Check if the environment supports interactive console (TTY)
+      if (!process.stdout.isTTY) {
+        console.log(`${message} (non-interactive environment, skipping animation)`);
+        setTimeout(resolve, duration); // Skip animation, resolve after duration
+        return;
+      }
 
+      const frames = ["⠋", "⠙", "⠚", "⠞", "⠖", "⠦", "⠴", "⠲", "⠳", "⠓", "⠒", "⠉"];
+      const glitchChars = ["@", "!", "#", "$", "%", "&", "*", "?", "=", "+"];
+      let i = 0;
+      const startTime = Date.now();
+
+      // Create a readline interface
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+
+      const interval = setInterval(() => {
+        const elapsedTime = Date.now() - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        const frameIndex = i % frames.length;
+
+        const opacity = Math.floor(128 + 127 * Math.sin(i * 0.2));
+        const frame = `\x1b[38;2;0;${opacity};255m${frames[frameIndex]}\x1b[0m`;
+
+        const wavePosition = (i % 20) / 20;
+        const coloredMessage = message
+          .split("")
+          .map((char, index) => {
+            const charPosition = index / message.length;
+            const distance = Math.abs(charPosition - wavePosition);
+            const intensity = Math.floor(255 - distance * 255 * 2);
+            if (Math.random() < 0.02) {
+              char = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+            }
+            return `\x1b[38;2;${intensity};${intensity};${intensity}m${char}\x1b[0m`;
+          })
+          .join("");
+
+        // Move cursor to start of line and write
+        readline.cursorTo(process.stdout, 0);
+        process.stdout.write(`${frame} ${coloredMessage} \x1b[32m${(progress * 100).toFixed(0)}%\x1b[0m`);
+
+        if (progress === 1) {
+          clearInterval(interval);
+          readline.cursorTo(process.stdout, 0);
+          process.stdout.write(`\x1b[32m✓\x1b[0m ${message} \x1b[32m100%\x1b[0m\n`);
+          rl.close();
+          resolve();
+        }
+        i++;
+      }, 80);
+    });
+  },
+};
 
 module.exports = Utils;
